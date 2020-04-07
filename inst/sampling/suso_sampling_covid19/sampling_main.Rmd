@@ -1,0 +1,218 @@
+---
+title: "Sampling for Phone Survey"
+author: "Michael Wild"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+              storyboard: true
+              social: menu
+              source_code: embed
+              theme: spacelab
+---
+
+
+
+```{r setup, include=FALSE}
+## options
+options(future.globals.maxSize=10000*1024^2)
+options(java.parameters = "- Xmx5g")
+options(shiny.maxRequestSize=6000*1024^2)
+## styles
+smTab<-list(dom="tp")
+
+```
+
+```{css}
+.sbframe-commentary .flexfill-container {
+  width: 500px important!;
+}
+```
+
+Column {.sidebar data-width=300}
+-----------------------------------------------------------------------
+
+
+
+```{r}
+h3("Sampling Frame")
+h5("Only CSV files!")
+helpText("File requirements:",br(),
+         "1. Single .csv file", br(),
+         "2. Frame file must only contain complete obserevations.", br(),
+         "3. Categorical variables should be provided as character.", br(),
+         "4. Double and Integer as numeric.")
+## 1. File Upload
+zipFileInput(id = "framefile",label = "Upload Frame Data", accept = (c("text/csv", ".csv")))
+frameFile<-callModule(zipFile, "framefile")
+## 2. Select Mode
+radioButtons("methodselect", "Select Approach", choices = c("SamplingStrata"=1, "Cube Sample"=2), selected = 1, inline = T)
+## Sampling Strata Inputs
+conditionalPanel("input.methodselect==1",
+                 samplingStrataInput(id = "updateStratInputs")
+)
+
+conditionalPanel("input.methodselect==2",
+                 samplingCubeInput(id = "updateCubeInputs")
+)
+## Sampling Strata Settings
+numericInput("sampSEED", "Set Seed",value = floor(runif(1, 1000,9999)), min=0, step = 1)
+conditionalPanel("input.methodselect==1",
+                 numericInput("minStrat", "Minimum Units/Strata", value = 2, min=0, step = 1),
+                 numericInput("nBins", "Number of Bins for continous", value = 3, min=0, step = 1, max=50)
+)
+
+
+
+
+
+```
+
+
+
+### Sample Upload
+
+```{r}
+observe({
+  FF<-frameFile()
+  shiny::validate(need(FF, message = "Upload .csv file first!"))
+  if(input$methodselect==1){ 
+    callModule(samplingStrataOutput, "updateStratInputs", dataset = FF)
+  } else if (input$methodselect==2) {
+    callModule(samplingCubeOutput, "updateCubeInputs", dataset = FF) 
+  }
+})
+
+DT::renderDataTable({
+  DT::datatable(frameFile())
+})
+
+```
+
+*** 
+
+
+After loading the data, and selection of the input variables, click the start button. This will iniate the sampling process, and present the results under the Sampling Properties section.
+<br>
+<br>
+
+```{r}
+#startButtonUI("startStrat")
+conditionalPanel("input.methodselect==1",
+                 samplingStrataInput_para("hotinputs")
+)
+conditionalPanel("input.methodselect==2",
+                 samplingCubeUI("cubeStart")
+)
+
+## 1. Stratified Sampling
+str_all_inputs<-callModule(samplingStrataOutput_para, "hotinputs",
+                           dataset = frameFile(),
+                           target_var = reactive(input$`updateStratInputs-target_var`),
+                           domain_var = reactive(input$`updateStratInputs-domain_var`))
+## 1.1 collect variables in observer listening to start stratification
+start_strat<-reactiveVal(); target_var<-reactiveVal(); domain_var<-reactiveVal(); strat_var_cat<-reactiveVal(); strat_var_cont<-reactiveVal(); minStrat<-reactiveVal(); frame_CV_in<-reactiveVal()
+## 1.2. run the observer w. reactive vals
+observeEvent(input$`hotinputs-start_strat`, {
+  start_strat(input$`hotinputs-start_strat`)
+  target_var(input$`updateStratInputs-target_var`)
+  domain_var(input$`updateStratInputs-domain_var`)
+  strat_var_cat(input$`updateStratInputs-strat_var_cat`)
+  strat_var_cont(input$`updateStratInputs-strat_var_cont`)
+  minStrat(input$minStrat)
+  frame_CV_in(str_all_inputs$frame_CV_in())
+})
+
+
+## 3. Run simulation
+finalSample<-callModule(samplingStrataSRV, "sstr_plots",
+                        dataset = frameFile(),
+                        frame_CV_in = frame_CV_in,
+                        start_strat = start_strat,
+                        target_var = target_var,
+                        domain_var = domain_var,
+                        strat_var_cat = strat_var_cat,
+                        strat_var_cont = strat_var_cont,
+                        nBins = reactive(input$nBins),
+                        seed = reactive(input$sampSEED),
+                        minStrat = minStrat)
+# 2. Cube Sampling
+finSampCube<-callModule(samplingCubeSRV,
+                        "cubeStart",
+                        dataset = frameFile(),
+                        sampleSize = reactive({input$`updateCubeInputs-sampleSize`}),
+                        balancedVariable = reactive({input$`updateCubeInputs-bal_var`}))
+
+
+
+
+```
+
+
+
+### Sample Properties
+
+```{r}
+samplingStrataUI("sstr_plots")
+```
+
+***
+`r h3("Sample Analytics")`
+
+
+
+### Final Sample
+
+```{r}
+
+DT::renderDataTable({
+  if(isolate(input$methodselect)==1){
+  DT::datatable(finalSample$finalSample())
+  } else if (isolate(input$methodselect==2)) {
+  DT::datatable(finSampCube$finalSample())
+  }
+})
+
+
+```
+
+***
+`r h3("Sample Download")`
+
+```{r}
+downloadBigUI("dwlframe", label = "Download Sample")
+observe({
+  FF<-frameFile()
+  shiny::validate(need(FF, message = "Upload .csv file first!"))
+  if(input$methodselect==1) {
+    callModule(downloadBig, "dwlframe",
+           frame_data = finalSample$finalSample(),
+           design = finalSample$finalDesign())
+
+  } else if (input$methodselect==2) {
+    check<<-finSampCube$finalSample()
+    check1<<-finSampCube$finalDesign()
+    callModule(downloadBig, "dwlframe",
+           frame_data = finSampCube$finalSample(),
+           design = finSampCube$finalDesign())
+  }
+ 
+  })
+
+```
+
+
+### Survey Solutions Assignment
+
+```{r}
+## put here the table with sample
+# DT::renderDataTable({
+#     DT::datatable(finalSample())
+#   })
+
+
+```
+
+
+***
+`r h3("Survey Solutions Assignment")`
+
