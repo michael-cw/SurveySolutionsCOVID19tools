@@ -179,7 +179,7 @@ samplingStrataSRV<-function(input, output, session, dataset, domain_var,
                      solution<-tryCatch(
                        {optimizeStrata(errors = force(frameCVin),realAllocation = F,
                                        strata = force(frame_STRAT_in), minnumstr = force(minStr),
-                                       writeFiles = F, iter = 50, pops = 20, cores = future::availableCores()-2,
+                                       writeFiles = F, iter = 50, pops = 20, cores = future::availableCores(),
                                        strcens = F, parallel = T, showPlot = F)},
                        error = function(e) {showNotification(paste(" Optimization Error! Please try a different specification."), closeButton = T,
                                                              type = "error");
