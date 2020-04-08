@@ -189,8 +189,6 @@ observe({
            design = finalSample$finalDesign())
 
   } else if (input$methodselect==2) {
-    check<<-finSampCube$finalSample()
-    check1<<-finSampCube$finalDesign()
     callModule(downloadBig, "dwlframe",
            frame_data = finSampCube$finalSample(),
            design = finSampCube$finalDesign())
@@ -201,9 +199,10 @@ observe({
 ```
 
 
-### Survey Solutions Assignment
+
 
 ```{r}
+### Survey Solutions Assignment
 ## put here the table with sample
 # DT::renderDataTable({
 #     DT::datatable(finalSample())

@@ -25,7 +25,7 @@ samplingCubeInput <- function(id) {
                    )
     ),
     numericInput(ns1("precision"),
-                 label = "Required Precision",
+                 label = "Required CV",
                  value = 0.05,
                  min = 0,
                  max = 0.5,
