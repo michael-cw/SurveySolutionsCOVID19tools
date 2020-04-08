@@ -163,6 +163,7 @@ samplingStrataSRV<-function(input, output, session, dataset, domain_var,
     req(strat_var)
     ###########################################################
     ###     EXECUTE ISOLATE OPTIMIZATION
+    ###       --> core check is base on data.table openMD
     withProgress(message = paste('Preparing data ...'),
                  value = 0,{
                    ##  1. Subset File

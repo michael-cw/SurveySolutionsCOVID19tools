@@ -67,12 +67,11 @@ downloadBig<-function(input, output, session, frame_data, design) {
     on.exit(setwd(wdOld))
     withProgress(message = paste('Preparing data for download'),
                  value = 0, {
-                   setwd(temp.dir)
                    ##  CSV only (too big for excel)
                    write_csv(fs_frame(), fs)
                    write_csv(ds_frame(), ds)
                    incProgress(1/2)
-                   utils::zip(zipfile=file, files=c(fs, ds))
+                   zip::zipr(zipfile=file, files= c(fs, ds), include_directories = F)
                    incProgress(1/2)
                  })
   }, contentType = "application/zip")
