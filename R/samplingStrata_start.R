@@ -173,7 +173,7 @@ samplingStrataSRV<-function(input, output, session, dataset, domain_var,
                    frame_STRAT_in<-buildStrataDF(frameXYin)
                    checkInput(frameCVin, frame_STRAT_in, frameXYin)
                    incProgress(message = "Searching for Optimal Number of Strata ...", amount = 0.2)
-                  if (future::availableCores()>1) {
+                  if ((data.table::getDTthreads()-2)>1) {
                     ## multicore
                    set.seed(seed())
                    isolate({
@@ -191,6 +191,8 @@ samplingStrataSRV<-function(input, output, session, dataset, domain_var,
                    })
                   } else {
                     ## single core
+                    showNotification(paste("No multicore support available on this system, using single core for optimization"), closeButton = T,
+                                     type = "warning")
                     set.seed(seed())
                     isolate({
                       solution<-tryCatch(
