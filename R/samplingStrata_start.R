@@ -181,7 +181,8 @@ samplingStrataSRV<-function(input, output, session, dataset, domain_var,
                                        strata = force(frame_STRAT_in), minnumstr = force(minStr),
                                        writeFiles = F, iter = 50, pops = 20, cores = future::availableCores(),
                                        strcens = F, parallel = T, showPlot = F)},
-                       error = function(e) {showNotification(paste(" Optimization Error! Please try a different specification."), closeButton = T,
+                       error = function(e) {showNotification(paste(" Optimization Error! Please try a different specification.
+                                                                   The error message is: ", e), closeButton = T,
                                                              type = "error");
                          return((NULL))
                        })
