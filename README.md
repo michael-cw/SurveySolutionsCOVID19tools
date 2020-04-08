@@ -20,7 +20,7 @@ devtools::install_github("michael-cw/SurveySolutionsCOVID19tools")
 
 * or in case you also want the vignettes include, please use:
 ```
-devtools::install_github("michael-cw/SurveySolutionsAPI", build_vignettes = T)
+devtools::install_github("michael-cw/SurveySolutionsCOVID19tools", build_vignettes = T)
 
 ```
 <br>
