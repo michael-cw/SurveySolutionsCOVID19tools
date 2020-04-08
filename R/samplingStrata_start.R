@@ -173,7 +173,8 @@ samplingStrataSRV<-function(input, output, session, dataset, domain_var,
                    frame_STRAT_in<-buildStrataDF(frameXYin)
                    checkInput(frameCVin, frame_STRAT_in, frameXYin)
                    incProgress(message = "Searching for Optimal Number of Strata ...", amount = 0.2)
-
+                  if (future::availableCores()>1) {
+                    ## multicore
                    set.seed(seed())
                    isolate({
                      solution<-tryCatch(
@@ -188,6 +189,23 @@ samplingStrataSRV<-function(input, output, session, dataset, domain_var,
                        })
 
                    })
+                  } else {
+                    ## single core
+                    set.seed(seed())
+                    isolate({
+                      solution<-tryCatch(
+                        {optimizeStrata(errors = force(frameCVin),realAllocation = F,
+                                        strata = force(frame_STRAT_in), minnumstr = force(minStr),
+                                        writeFiles = F, iter = 50, pops = 20,
+                                        strcens = F, parallel = F, showPlot = F)},
+                        error = function(e) {showNotification(paste(" Optimization Error! Please try a different specification.
+                                                                   The error message is: ", e), closeButton = T,
+                                                              type = "error");
+                          return((NULL))
+                        })
+
+                    })
+                   }
                    req(solution)
                    solutionsList$frame_STRAT_in_summay<-data.table(solution$aggr_strata %>%
                                                                      dplyr::group_by(DOM1) %>%
