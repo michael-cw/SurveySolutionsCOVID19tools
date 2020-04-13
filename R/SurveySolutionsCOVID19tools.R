@@ -44,6 +44,27 @@ if(getRversion() >= "3.3.0")  {
     "pik",
     "Variable",
     "n_distinct",
-    "COST"
+    "COST",
+    ".",
+    "HHcount2",
+    "psu2",
+    "stratum2",
+    "newGroup",
+    "roll",
+    "newPSU",
+    "newCount",
+    "tmp",
+    "stratum",
+    "weight",
+    "CV",
+    "SE",
+    "Prob",
+    "uid",
+    "count",
+    "STRATO1",
+    "M1",
+    "S1",
+    "N",
+    "bias"
     ))
 }

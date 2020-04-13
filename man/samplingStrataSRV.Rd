@@ -6,7 +6,7 @@
 \usage{
 samplingStrataSRV(input, output, session, dataset, domain_var, target_var,
   strat_var_cat, strat_var_cont, start_strat, frame_CV_in, nBins, seed,
-  minStrat)
+  minStrat, nsample = 1000)
 }
 \arguments{
 \item{input}{standard shiny input}
@@ -34,6 +34,8 @@ samplingStrataSRV(input, output, session, dataset, domain_var, target_var,
 \item{seed}{the random seed required for the optimization to be reproducable}
 
 \item{minStrat}{this is the minimum number of units required per stratum}
+
+\item{nsample}{number of simulation runs, default is 1000.}
 }
 \value{
 Data frame containing the final sample

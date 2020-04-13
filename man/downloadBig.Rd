@@ -4,7 +4,8 @@
 \alias{downloadBig}
 \title{Shiny server module for download of 2 csv files in singel zip file}
 \usage{
-downloadBig(input, output, session, frame_data, design)
+downloadBig(input, output, session, frame_data, design, sample, seed,
+  modid)
 }
 \arguments{
 \item{input}{standard shiny input}
@@ -16,6 +17,12 @@ downloadBig(input, output, session, frame_data, design)
 \item{frame_data}{frame for download (1. dataset)}
 
 \item{design}{design for download (2. dataset)}
+
+\item{sample}{the final sample}
+
+\item{seed}{the seed of the random process to reproduce (inlcude in file name)}
+
+\item{modid}{the id of namespace to be used in shinyjs}
 }
 \description{
 Shiny server module for download of 2 csv files in singel zip file

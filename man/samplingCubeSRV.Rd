@@ -5,7 +5,7 @@
 \title{Shiny server module for simulation start}
 \usage{
 samplingCubeSRV(input, output, session, dataset, sampleSize,
-  balancedVariable, nsample = 500)
+  balancedVariable, target_var, nsample = 1000, seed)
 }
 \arguments{
 \item{input}{standard shiny input}
@@ -20,7 +20,11 @@ samplingCubeSRV(input, output, session, dataset, sampleSize,
 
 \item{balancedVariable}{set of variables to balance on}
 
+\item{target_var}{the variable of interest}
+
 \item{nsample}{Number of Simulation runs (recommended is 1000)}
+
+\item{seed}{Set seed for MC with doRNG}
 }
 \value{
 Data frame containing the final sample

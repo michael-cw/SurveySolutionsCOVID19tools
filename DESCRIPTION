@@ -27,7 +27,14 @@ Imports:
     BalancedSampling,
     stats,
     stringr,
-    DT
+    DT,
+    parallel,
+    doParallel,
+    pbapply,
+    sampling,
+    plotly,
+    doRNG,
+    ReGenesees
 Depends:
     R (>= 3.3.0)
 Suggests: 

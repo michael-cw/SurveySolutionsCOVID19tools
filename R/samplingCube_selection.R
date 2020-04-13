@@ -72,6 +72,10 @@ samplingCubeOutput <- function(input, output, session, dataset) {
   observe({
     FF<-dataset
     shiny::validate(need(FF, message = F))
+    ####################################
+    ## ONLY NUMERIC VARIABLES
+    tokeep <- which(sapply(FF,is.numeric))
+    FF<-FF[ ,tokeep, with=FALSE]
     #################################
     ## Target Var
     updateSelectizeInput(session = session, inputId = "targetvar",
@@ -116,7 +120,7 @@ samplingCubeOutput <- function(input, output, session, dataset) {
       #                               S = psd,
       #                               N = nrow(FF)
       # )$n)
-      srs<-ceiling(nCont(CV0 = input$precision, N = nrow(FF), ybarU = pmean, S2 = pvar))
+      srs<-ceiling(nCont(CV0 = input$precision/1.645, N = nrow(FF), ybarU = pmean, S2 = pvar))
     }
     updateNumericInput(session = session, inputId ="sampleSize",
                        label = "Sample Size",

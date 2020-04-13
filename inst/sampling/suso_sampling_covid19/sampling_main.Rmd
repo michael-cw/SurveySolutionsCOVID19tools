@@ -61,9 +61,18 @@ conditionalPanel("input.methodselect==1",
                  numericInput("nBins", "Number of Bins for continous", value = 3, min=0, step = 1, max=50)
 )
 
+radioButtons("reGenesees", "Enhanced Simulation with ReGenesees?", c("Yes"=1, "No"=2), selected = 2, inline = T)
 
-
-
+observeEvent(input$reGenesees, {
+  if (input$reGenesees==1) {
+    showModal(modalDialog(
+      title = "Attention!",
+      "For this purpose you require the ReGenesees package installed. If that is not the case, please got to: https://www.istat.it/en/methods-and-tools/methods-and-it-tools/process/processing-tools/regenesees",
+      easyClose = TRUE,
+      footer = NULL
+    ))
+  }
+})
 
 ```
 
@@ -81,11 +90,31 @@ observe({
     callModule(samplingCubeOutput, "updateCubeInputs", dataset = FF) 
   }
 })
-
-DT::renderDataTable({
-  DT::datatable(frameFile())
+## Correlation Matrix
+plotly::renderPlotly({
+  FF<<-frameFile()
+  shiny::validate(need(FF, message = "Upload .csv file first!"))
+  ## Correlation Matrix for numeric values
+  tokeep <- which(sapply(FF,is.numeric))
+  FF<-FF[ ,tokeep, with=FALSE]
+  XX<-stats::cor(FF)
+  ## drop NA row/columns
+  XX<-XX[, colSums(is.na(XX)) != (nrow(XX)-1)]
+  XX<-XX[rowSums(is.na(XX)) != (ncol(XX)),]
+  plotly::plot_ly(z=XX, type = "heatmap", 
+                  colors = RColorBrewer::brewer.pal(10, "RdYlBu"))%>%
+    plotly::layout(
+      xaxis = list(
+        ticktext = colnames(XX), 
+        tickvals = 1:length(colnames(XX)),
+        tickmode = "array"
+      ),
+      yaxis = list(
+        ticktext = rownames(XX), 
+        tickvals = 1:length(rownames(XX)),
+        tickmode = "array"
+      ))
 })
-
 ```
 
 *** 
@@ -124,7 +153,7 @@ observeEvent(input$`hotinputs-start_strat`, {
 
 
 ## 3. Run simulation
-finalSample<-callModule(samplingStrataSRV, "sstr_plots",
+finalSample<-callModule(samplingStrataSRV, "stratStart",
                         dataset = frameFile(),
                         frame_CV_in = frame_CV_in,
                         start_strat = start_strat,
@@ -139,6 +168,8 @@ finalSample<-callModule(samplingStrataSRV, "sstr_plots",
 finSampCube<-callModule(samplingCubeSRV,
                         "cubeStart",
                         dataset = frameFile(),
+                        seed = reactive(input$sampSEED),
+                        target_var = reactive(({input$`updateCubeInputs-targetvar`})),
                         sampleSize = reactive({input$`updateCubeInputs-sampleSize`}),
                         balancedVariable = reactive({input$`updateCubeInputs-bal_var`}))
 
@@ -151,12 +182,54 @@ finSampCube<-callModule(samplingCubeSRV,
 
 ### Sample Properties
 
+
 ```{r}
-samplingStrataUI("sstr_plots")
+conditionalPanel("input.methodselect==1",
+                 simuDiagnosticUI("sstr_plots"))
+conditionalPanel("input.methodselect==2",
+                 simuDiagnosticUI("cube_plots")
+)
+
+callModule(simuDiagnosticSRV,
+           "cube_plots",
+           dataset = finSampCube$final())
+
+callModule(simuDiagnosticSRV,
+           "sstr_plots",
+           dataset = finalSample$final())
 ```
 
 ***
-`r h3("Sample Analytics")`
+
+
+```{r}
+
+actionButton("dwl_sample_rep", "Download Sampling Report", width = "100%")
+
+br()
+br()
+DT::renderDataTable({
+  if(isolate(input$methodselect)==1){
+    tab<<-data.table(finalSample$finalDesign())
+    tab<-tab[ ,.(n_strata=.N,
+               n_sample=sum(SOLUZ)), by = .(DOM1)]
+    tab[,DOM1:=as.character(DOM1)]
+    total<-data.table(DOM1="Total", n_strata=sum(tab[["n_strata"]]),
+                      n_sample = sum(tab[["n_sample"]]))
+    tab<-rbindlist(list(total, tab), fill = T)
+    DT::datatable(tab, rownames = F, 
+                  options = list(smTab$dom,
+                                 scrollX = TRUE)) %>%
+      DT::formatRound(1:length(tab), 2)
+  } else if (isolate(input$methodselect==2)) {
+    tab = finSampCube$finalDesign()
+    DT::datatable(tab, rownames = F, 
+                  options = list(smTab$dom,
+                                 scrollX = TRUE)) %>%
+      DT::formatRound(1:length(tab), 2)
+  }
+})
+```
 
 
 
@@ -166,9 +239,9 @@ samplingStrataUI("sstr_plots")
 
 DT::renderDataTable({
   if(isolate(input$methodselect)==1){
-  DT::datatable(finalSample$finalSample())
+    DT::datatable(finalSample$finalSample())
   } else if (isolate(input$methodselect==2)) {
-  DT::datatable(finSampCube$finalSample())
+    DT::datatable(finSampCube$finalSample())
   }
 })
 
@@ -179,22 +252,30 @@ DT::renderDataTable({
 `r h3("Sample Download")`
 
 ```{r}
-downloadBigUI("dwlframe", label = "Download Sample")
+conditionalPanel("input.methodselect==1",
+                 downloadBigUI("dwlframe", label = "Download Sample"))
+conditionalPanel("input.methodselect==2",
+                 downloadBigUI("dwlframeCube", label = "Download Sample"))
+
 observe({
   FF<-frameFile()
   shiny::validate(need(FF, message = "Upload .csv file first!"))
   if(input$methodselect==1) {
-    callModule(downloadBig, "dwlframe",
-           frame_data = finalSample$finalSample(),
-           design = finalSample$finalDesign())
-
+    callModule(downloadBig, "dwlframe", modid = "dwlframe",
+               frame_data = finalSample$finalFrame(),
+               design = finalSample$finalDesign(),
+               sample = finalSample$finalSample(),
+               seed = reactive(input$sampSEED))
+    
   } else if (input$methodselect==2) {
-    callModule(downloadBig, "dwlframe",
-           frame_data = finSampCube$finalSample(),
-           design = finSampCube$finalDesign())
+    callModule(downloadBig, "dwlframeCube", modid = "dwlframeCube",
+               frame_data = finSampCube$finalFrame(),
+               design = finSampCube$finalDesign(),
+               sample = finSampCube$finalSample(),
+               seed = reactive(input$sampSEED))
   }
- 
-  })
+  
+})
 
 ```
 
