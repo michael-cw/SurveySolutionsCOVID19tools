@@ -49,6 +49,10 @@ This will open the sampling dashboard in your default browser.
 
 <br><br>
 
+### REGENESEES
+
+Since this package also uses the REGENESEES package, which is not on CRAN, you need to download this package from the following link prior to the installation of the tool box.
+https://www.istat.it/en/methods-and-tools/methods-and-it-tools/process/processing-tools/regenesees
 
 ***
 
