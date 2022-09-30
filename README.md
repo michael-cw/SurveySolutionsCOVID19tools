@@ -65,3 +65,15 @@ To find information on the API syntax, visit your own servers API documentation 
 
 * https://demo.mysurvey.solutions//apidocs/index#!
 
+*****
+#### For users with absolutely zero knowledge of R and Rstudio
+
+As since recently also users with zero knowledge about R and Rstudio try to install this package, i added here a step-by-step guide on how to install from github: https://www.displayr.com/installing-r-packages-from-github/
+
+However in general i recommend to have a least some basic familiarity with R and the R environment when using packages from github, as this also facilitates trouble shooting. In addtion it allows you also to raise useful issues and feedback. 
+
+A good starting point is here: https://rstudio.cloud/learn/primers
+
+Another starting point is here: https://education.rstudio.com/learn/beginner/
+
+And there are plenty of other resources out there, which allow you to learn a very interesting and useful (statistical) programming language.
